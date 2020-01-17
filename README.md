@@ -1,6 +1,6 @@
 # Team Ravenclaw
 
-# Comparison of Machine Learning Techniques for Predicting Wind Power generation from Weather Data for Germany.
+# Comparison of Machine Learning Techniques for Predicting Wind Power Generation from Weather Data for Germany.
 
 Code used in group project for Energy Data Analysis ESDA:
 
