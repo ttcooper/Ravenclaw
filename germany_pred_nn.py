@@ -1,30 +1,47 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import os
-import sklearn
+import math
+
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
-from sklearn.preprocessing import OneHotEncoder
+from sklearn.model_selection import cross_val_score
+from sklearn.model_selection import KFold
+from sklearn.model_selection import GridSearchCV
+from sklearn.metrics import mean_squared_error
+from sklearn.metrics import r2_score
 
-import keras
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.wrappers.scikit_learn import KerasRegressor
 from keras import backend
-from sklearn.model_selection import cross_val_score
-from sklearn.model_selection import KFold
-from sklearn.metrics import mean_squared_error
-from sklearn.metrics import r2_score
-from sklearn.utils import check_array
-
-from sklearn import metrics
-#import seaborn as sns
 
 
 pd.set_option('display.max_rows', 500)
 pd.set_option('display.max_columns', 500)
 pd.set_option('display.width', 1000)
+
+def do_it_all():
+    df_train, df_test, df_all = make_train_test()
+    X_train, y_train, n_cols, features = preprocessing(df=df_train)
+    X_test, y_test, n_cols, features = preprocessing(df=df_test)
+
+    model = KerasRegressor(build_fn=make_model, epochs=100, batch_size=20, verbose=2)
+
+    # test_settings(model)
+
+    # mse_kfold_scores = k_cross_val(model, X_train, y_train)
+
+    model.fit(X_train, y_train)
+    pred_y = model.predict(X_test)
+    r2 = r2_score(y_test, pred_y)
+    mse = mean_squared_error(y_test, pred_y)
+    rmse = math.sqrt(mse)
+
+    df_final = make_results_table(y_test, pred_y, df_test)
+    return df_final
+
+    print("KERAS: R2 : {0:f}, MSE : {1:f}".format(r2, rmse))
 
 
 def make_train_test():
@@ -33,7 +50,7 @@ def make_train_test():
 
     df_train, df_test = train_test_split(df_all, test_size=0.3)
 
-    return df_train, df_test
+    return df_train, df_test, df_all
 
 
 def preprocessing(df):
@@ -125,34 +142,47 @@ def k_cross_val(model, X_train, y_train):
 
     return mse_kfold_scores
 
-def mean_absolute_percentage_error(y_true, y_pred):
-    y_true, y_pred = check_array(y_true, y_pred)
+def plot_magic(df_all, pred_y, y_test):
+    df = df_all
 
-    ## Note: does not handle mix 1d representation
-    if _is_1d(y_true):
-        y_true, y_pred = _check_1d_array(y_true, y_pred)
+    plt.scatter(y=pred_y, x=y_test, alpha=0.5)
+    plt.title("comparison of actual and predicted wind generation (MWh)")
+    plt.xlabel("actual wind generation (MWh)")
+    plt.ylabel("predicted wind generation (MWh)")
+    plt.show()
 
-    return np.mean(np.abs((y_true - y_pred) / y_true)) * 100
+    plt.scatter(y=pred_y, x=rmse, alpha=0.5)
 
-def do_it():
-    df_train, df_test = make_train_test()
-    X_train, y_train, n_cols, features = preprocessing(df=df_train)
-    X_test, y_test, n_cols, features = preprocessing(df=df_test)
 
-    model = KerasRegressor(build_fn=make_model, epochs=100, batch_size=20, verbose=2)
+    df_results = pd.DataFrame(y_test)
+    df_results['wind_pred'] = pred_y
+    df_results['abs_error'] = abs(df_results['DE_wind_generation_actual'] - df_results['wind_pred'])
+    df_results['perc_error'] = df_results['abs_error'] / abs(df_results['DE_wind_generation_actual'])
 
-    test_settings(model)
+    df_results['perc_error'].mean()
 
-    mse_kfold_scores = k_cross_val(model, X_train, y_train)
+    plt.scatter(x=df['v1'], y = df['DE_wind_generation_actual'], alpha=0.5)
+    plt.scatter(x=df['v2'], y = df['DE_wind_generation_actual'], alpha=0.5)
+    plt.scatter(x=df['v_50m'], y = df['DE_wind_generation_actual'], alpha=0.5)
+    plt.legend(['wind speed at displacement height +2m','wind speed at displacement height +10m', 'wind speed at 50m above ground'])
+    plt.xlabel('wind speed (m/s)')
+    plt.ylabel('actual wind generation (MW)')
 
-    model.fit(X_train, y_train)
-    pred_y = model.predict(X_test)
-    r2 = r2_score(y_test, pred_y)
-    mse = mean_squared_error(y_test, pred_y)
-    rmse = math.sqrt(mse)
-    mape = mean_absolute_percentage_error(y_test, pred_y)
 
-    print("KERAS: R2 : {0:f}, MSE : {1:f}".format(r2, rmse))
+def make_results_table(y_test, y_pred, df_test):
+    df_results = pd.DataFrame(y_test)
+    df_results['wind_pred'] = y_pred
+    df_results['abs_error'] = abs(df_results['DE_wind_generation_actual'] - df_results['wind_pred'])
+    df_results['perc_error'] = df_results['abs_error'] / abs(df_results['DE_wind_generation_actual'])
+
+    df_t = df_test[['dt', 'v1', 'v2', 'v_50m', 'h1', 'h2', 'z0', 'SWTDN', 'SWGDN', 'T', 'rho', 'p']]
+
+    df_final = pd.merge(df_results, df_t, how='inner', left_index=True, right_index=True)
+
+    return df_final
+
+def plot_magic(df_all, pred_y, y_test):
+    df = df_all
 
     plt.scatter(y=pred_y, x=y_test, alpha=0.5)
     plt.title("comparison of actual and predicted wind generation (MWh)")
@@ -180,26 +210,7 @@ def do_it():
 
 
 
-'''
-def build_NN(model, X_train, y_train):
-    history = model(X_train, y_train, epochs=150, batch_size=5, verbose=1, validation_split=0.2)
-
-    print(history.history.keys())
-    # "Loss"
-    plt.plot(history.history['loss'])
-    plt.plot(history.history['val_loss'])
-    plt.title('model loss')
-    plt.ylabel('loss')
-    plt.xlabel('epoch')
-    plt.legend(['train', 'validation'], loc=fdfdfa
-    plt.show()
 
 
 
 
-
-    # model.fit(X_train, y_train, batch_size=10, epochs=100)
-    model.evaluate(X_test, y_test)[1]
-    _, accuracy = model.evaluate(X_train, y_train)
-    print('Accuracy: %.2f' % (accuracy * 100))
-'''
