@@ -1,4 +1,7 @@
 # Ravenclaw
+
+# Comparison of Machine Learning Techniques for Predicting Wind Power generation from weather data for Germany.
+
 Code used in group project for Energy Data Analysis ESDA:
 
   germany_data_prep.py                  |    This code takes weather and wind power generation data, processes the data,
