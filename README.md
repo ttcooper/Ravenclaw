@@ -19,5 +19,7 @@ Code used in group project for Energy Data Analysis ESDA:
   
   germany_2016_with_features_adj.csv    |    This dataset use for linear regression
   
+  ShinyApp                              |    This contains the code used to create the RShiny webpage.
+  
   
   
