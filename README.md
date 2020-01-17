@@ -12,6 +12,8 @@ Code used in group project for Energy Data Analysis ESDA:
   germany_2016_processed_data.csv       |    The resulting data after processing, with engineered features can be found here as a .csv file. 
                                              The original input data was too large to upload to GitHub, 
                                              but can be found at https://open-power-system-data.org/.
+  
+  
   germany_lm.R                          |    This code predicts wind power generation using linear regression
   
   
