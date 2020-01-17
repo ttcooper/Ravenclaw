@@ -1,7 +1,7 @@
 # Ravenclaw
 Code used in group project for Energy Data Analysis ESDA:
 
-  germany_data_prep.py                  |    This code takes weather and wind power generation data, processes the data
+  germany_data_prep.py                  |    This code takes weather and wind power generation data, processes the data,
                                              merges the two sources and performs feature engineering.
   
   germany_pred_nn.py                    |    This code predicts wind generation using a neural network.                                          
