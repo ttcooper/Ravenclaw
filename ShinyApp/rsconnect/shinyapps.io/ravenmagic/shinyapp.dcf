@@ -1,0 +1,10 @@
+name: shinyapp
+title:
+username:
+account: ravenmagic
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 1670767
+bundleId: 2735765
+url: https://ravenmagic.shinyapps.io/shinyapp/
+when: 1579273523.65192
